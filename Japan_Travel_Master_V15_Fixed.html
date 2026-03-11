@@ -1,0 +1,234 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japan Travel Master V15</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f1f5f9; font-family: ui-sans-serif, system-ui, sans-serif; }
+        .cb { width: 22px; height: 22px; cursor: pointer; }
+        .me-cb { accent-color: #2563eb; }
+        .her-cb { accent-color: #db2777; }
+        .st { text-decoration: line-through; color: #cbd5e1; }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-10 text-center">
+            <input type="text" id="m-title" value="🇯🇵 JAPAN 2026" oninput="saveAll()" 
+                   class="bg-transparent text-5xl font-black text-red-600 mb-2 text-center w-full focus:outline-none focus:ring-2 focus:ring-red-100 rounded-xl">
+            <p class="text-slate-400 font-bold uppercase tracking-[0.3em] text-[10px] mb-8">V15 - CRASH PROOF EDITION</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-200">
+                    <span class="text-[10px] font-black text-slate-400 uppercase block mb-1">Total Trip</span>
+                    <span id="s-total" class="text-xl font-black text-slate-800">$0.00</span>
+                </div>
+                <div class="bg-blue-50 p-5 rounded-[2rem] shadow-sm border border-blue-100">
+                    <span class="text-[10px] font-black text-blue-500 uppercase block mb-1">Me Paid</span>
+                    <span id="s-me" class="text-xl font-black text-blue-600">$0.00</span>
+                </div>
+                <div class="bg-pink-50 p-5 rounded-[2rem] shadow-sm border border-pink-100">
+                    <span class="text-[10px] font-black text-pink-500 uppercase block mb-1">Partner Paid</span>
+                    <span id="s-her" class="text-xl font-black text-pink-600">$0.00</span>
+                </div>
+                <div class="bg-red-50 p-5 rounded-[2rem] shadow-sm border border-red-100">
+                    <span class="text-[10px] font-black text-red-500 uppercase block mb-1">Still Owed</span>
+                    <span id="s-owed" class="text-xl font-black text-red-600">$0.00</span>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-3">
+                <button onclick="exportJSON()" class="bg-slate-900 text-white px-6 py-3 rounded-2xl text-xs font-black shadow-lg hover:bg-black transition">📥 EXPORT BACKUP</button>
+                <label class="cursor-pointer bg-white border-2 border-slate-200 text-slate-800 px-6 py-3 rounded-2xl text-xs font-black shadow-sm hover:bg-slate-50 transition">
+                    📤 IMPORT FILE
+                    <input type="file" id="fileIn" class="hidden" onchange="importJSON(event)">
+                </label>
+            </div>
+        </header>
+
+        <div id="itinerary-list" class="space-y-10"></div>
+    </div>
+
+    <script>
+        const AI_DB = {"Flight": "Tip: T3 at Narita is the budget terminal. Follow the blue floor tracks to walk to T2 for the Narita Express train.", "APA Hotel": "Efficient rooms with great tech. Steps away from Shinjuku's nightlife and Golden Gai.", "Team labs": "Immersive art. Wear shorts as you will be walking through knee-deep water!", "Round 1": "Massive multi-story arcade. Try the rhythm games or the crane machines.", "Kawaguchiko": "Best spot for Mt. Fuji views. The lake reflection at sunrise is iconic.", "Kachi Kachi": "Panoramic ropeway. Offers a great view of the Fuji cone and the forest below.", "Koko Hotel": "Clean business style. Very close to the Shinkansen tracks and local Shizuoka dining.", "Aoba Oden": "Hidden alleyway with tiny stalls. Try the Shizuoka-style black broth oden.", "Nihondaira": "Scenic plateau. The ropeway takes you to Toshogu Shrine with views of Suruga Bay.", "Tea Farm": "Shizuoka is the green tea capital. Visit a farm for fresh matcha and 'shincha' tasting.", "Nara": "Home to the bowing deer. Visit Todai-ji to see the massive Great Buddha statue.", "Hozugawa": "Traditional wooden boat ride down the river rapids. Ends in Arashiyama.", "Piece Hostel": "Award-winning designer hostel. Great communal bar and modern dorms/rooms.", "7-Eleven": "Don't miss the egg salad sandwiches and hot fried chicken at the counter.", "Don Quijote": "Massive discount store. Perfect for KitKats and weird souvenirs. Bring your passport for tax-free!", "Shinkansen": "Bullet train. Punctual to the second. Book 'oversized baggage' seats if you have large suitcases."};
+        const DEFAULT_DATA = [{"day": "Day 1", "date": "Saturday 25th", "title": "MELBOURNE TO JAPAN", "details": [{"text": "Flight JQ34 - JQ25", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": "6:25 AM departure"}, {"text": "APA Hotel Higashi Shinjuku", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": "Check out Wed 29th"}]}, {"day": "Day 2", "date": "Sunday 26th", "title": "TOKYO", "details": []}, {"day": "Day 3", "date": "Monday 27th", "title": "TOKYO", "details": [{"text": "Team labs - Planets", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}, {"text": "Round 1 Arcade", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}]}, {"day": "Day 4", "date": "Tuesday 28th", "title": "TOKYO", "details": [{"text": "Go see punch", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}]}, {"day": "Day 5", "date": "Wednesday 29th", "title": "TOKYO - LAKE KAWAGUCHI", "details": [{"text": "Kawaguchiko Lakeside Hotel", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}, {"text": "Kachi Kachi Ropeway", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}]}, {"day": "Day 6", "date": "Thursday 30th", "title": "LAKE KAWAGUCHI", "details": []}, {"day": "Day 7", "date": "Friday 1st", "title": "LAKE KAWAGUCHI - SHIZUOKA", "details": [{"text": "Koko Hotel", "cost": 304.0, "paidMe": false, "paidPartner": false, "info": ""}, {"text": "Aoba Oden Alley", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}, {"text": "Nihondaira Plateau", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}, {"text": "Visit Tea Farm", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}]}, {"day": "Day 8", "date": "Saturday 2nd", "title": "SHIZUOKA", "details": [{"text": "Miho no Matsubara", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}]}, {"day": "Day 9", "date": "Sunday 3rd", "title": "SHIZUOKA - KYOTO", "details": [{"text": "Piece Hostel Kyoto", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}]}, {"day": "Day 10", "date": "Monday 4th", "title": "KYOTO", "details": [{"text": "Day trip to Nara", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}]}, {"day": "Day 11", "date": "Tuesday 5th", "title": "KYOTO", "details": [{"text": "Hozugawa River Boat Tour", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}]}, {"day": "Day 12", "date": "Wednesday 6th", "title": "KYOTO", "details": []}, {"day": "Day 13", "date": "Thursday 7th", "title": "KYOTO", "details": []}, {"day": "Day 14", "date": "Friday 8th", "title": "KYOTO - OSAKA", "details": []}, {"day": "Day 15", "date": "Saturday 9th", "title": "OSAKA - CAIRNS", "details": [{"text": "Flight JQ16", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}]}, {"day": "Day 16", "date": "Sunday 10th", "title": "CAIRNS - MELBOURNE", "details": [{"text": "Flight to Melbourne", "cost": 0.0, "paidMe": false, "paidPartner": false, "info": ""}]}];
+
+        let data = JSON.parse(localStorage.getItem('j-v15-data')) || DEFAULT_DATA;
+        let title = localStorage.getItem('j-v15-title') || "🇯🇵 JAPAN 2026";
+
+        document.getElementById('m-title').value = title;
+
+        function saveAll() {
+            title = document.getElementById('m-title').value;
+            localStorage.setItem('j-v15-data', JSON.stringify(data));
+            localStorage.setItem('j-v15-title', title);
+            calc();
+        }
+
+        function calc() {
+            let t=0, m=0, h=0, paid=0;
+            data.forEach(day => {
+                day.details.forEach(item => {
+                    let c = parseFloat(item.cost || 0); t += c;
+                    if(item.paidMe && item.paidPartner) { m += c/2; h += c/2; paid += c; }
+                    else if(item.paidMe) { m += c; paid += c; }
+                    else if(item.paidPartner) { h += c; paid += c; }
+                });
+            });
+            document.getElementById('s-total').innerText = '$' + t.toFixed(2);
+            document.getElementById('s-me').innerText = '$' + m.toFixed(2);
+            document.getElementById('s-her').innerText = '$' + h.toFixed(2);
+            document.getElementById('s-owed').innerText = '$' + (t - paid).toFixed(2);
+        }
+
+        function updateD(dIdx, field, val) {
+            data[dIdx][field] = val;
+            saveAll();
+        }
+
+        function updateI(dIdx, iIdx, field, val) {
+            if(field === 'cost') data[dIdx].details[iIdx][field] = parseFloat(val) || 0;
+            else data[dIdx].details[iIdx][field] = val;
+            
+            if(field === 'text') document.getElementById(`row-t-${dIdx}-${iIdx}`).innerText = val;
+            if(field === 'cost') document.getElementById(`row-c-${dIdx}-${iIdx}`).innerText = '$' + (parseFloat(val)||0).toFixed(2);
+            saveAll();
+        }
+
+        function toggle(dIdx, iIdx, field, e) {
+            e.stopPropagation();
+            data[dIdx].details[iIdx][field] = !data[dIdx].details[iIdx][field];
+            const textEl = document.getElementById(`row-t-${dIdx}-${iIdx}`);
+            if(data[dIdx].details[iIdx].paidMe || data[dIdx].details[iIdx].paidPartner) textEl.classList.add('st');
+            else textEl.classList.remove('st');
+            saveAll();
+        }
+
+        function syncAI(dIdx, iIdx) {
+            const name = data[dIdx].details[iIdx].text.toLowerCase();
+            const box = document.getElementById(`ai-${dIdx}-${iIdx}`);
+            box.innerText = "Syncing with travel database...";
+            setTimeout(() => {
+                let match = null;
+                for(let key in AI_DB) {
+                    if(name.includes(key.toLowerCase())) match = AI_DB[key];
+                }
+                box.innerText = match || "No specific tips for '" + name + "' yet. Try using names like 'Shinkansen', '7-Eleven', or 'Don Quijote'.";
+            }, 500);
+        }
+
+        function addI(dIdx) {
+            data[dIdx].details.push({ text: "New Activity", cost: 0, paidMe: false, paidPartner: false, info: "" });
+            render(); saveAll();
+        }
+
+        function delI(dIdx, iIdx, e) {
+            e.stopPropagation();
+            if(confirm("Remove this activity?")) {
+                data[dIdx].details.splice(iIdx, 1);
+                render(); saveAll();
+            }
+        }
+
+        function render() {
+            const container = document.getElementById('itinerary-list');
+            container.innerHTML = '';
+            data.forEach((day, dIdx) => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden";
+                
+                let rows = day.details.map((item, iIdx) => `
+                    <div class="border-b border-slate-50 last:border-0">
+                        <div class="flex items-center px-6 py-5 cursor-pointer hover:bg-slate-50 transition" 
+                             onclick="document.getElementById('exp-${dIdx}-${iIdx}').classList.toggle('hidden')">
+                            <div class="flex gap-2 mr-4">
+                                <input type="checkbox" class="cb me-cb" ${item.paidMe ? 'checked' : ''} onclick="toggle(${dIdx}, ${iIdx}, 'paidMe', event)">
+                                <input type="checkbox" class="cb her-cb" ${item.paidPartner ? 'checked' : ''} onclick="toggle(${dIdx}, ${iIdx}, 'paidPartner', event)">
+                            </div>
+                            <div class="flex-1">
+                                <span id="row-t-${dIdx}-${iIdx}" class="text-sm font-bold text-slate-800 ${item.paidMe || item.paidPartner ? 'st' : ''}">${item.text}</span>
+                                <div class="text-[10px] font-black text-blue-500 uppercase tracking-tighter">Edit / Sync AI ▾</div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span id="row-c-${dIdx}-${iIdx}" class="font-mono font-black text-slate-700 text-sm">$${item.cost.toFixed(2)}</span>
+                                <button onclick="delI(${dIdx}, ${iIdx}, event)" class="text-slate-200 hover:text-red-500 transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="exp-${dIdx}-${iIdx}" class="hidden bg-slate-50 p-6 md:p-10 border-t border-slate-100">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div class="space-y-6">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <label class="text-[10px] font-black text-indigo-500 uppercase tracking-widest">✨ AI Travel Guide</label>
+                                        <button onclick="syncAI(${dIdx}, ${iIdx})" class="bg-indigo-600 text-white text-[9px] font-black px-3 py-1.5 rounded-xl shadow-md hover:bg-indigo-700 transition">SYNC AI</button>
+                                    </div>
+                                    <div id="ai-${dIdx}-${iIdx}" class="bg-white p-5 rounded-3xl border border-indigo-100 text-sm text-slate-700 leading-relaxed italic shadow-sm">
+                                        ${AI_DB[item.text] || "Name your activity and click Sync AI for tips."}
+                                    </div>
+                                    <textarea oninput="updateI(${dIdx}, ${iIdx}, 'info', this.value)" placeholder="Confirmation numbers, times, or notes..." 
+                                              class="w-full p-5 rounded-3xl border border-slate-200 text-sm h-36 outline-none shadow-sm focus:ring-4 focus:ring-blue-50">${item.info || ''}</textarea>
+                                </div>
+                                <div class="space-y-6">
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase">Activity Name</label>
+                                    <input type="text" value="${item.text}" oninput="updateI(${dIdx}, ${iIdx}, 'text', this.value)" class="w-full p-4 rounded-2xl border border-slate-200 text-sm font-bold shadow-sm">
+                                    <div class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm text-center">
+                                        <label class="block text-[10px] font-black text-green-500 uppercase mb-3">Cost ($)</label>
+                                        <input type="number" step="0.01" value="${item.cost}" oninput="updateI(${dIdx}, ${iIdx}, 'cost', this.value)" 
+                                               class="w-full bg-slate-50 rounded-2xl p-4 text-4xl font-mono font-black text-slate-800 text-center outline-none border-2 border-transparent focus:border-green-400 transition">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                card.innerHTML = `
+                    <div class="bg-slate-50/50 px-8 py-8 border-b border-slate-100">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center gap-3">
+                                    <input type="text" value="${day.day}" oninput="updateD(${dIdx}, 'day', this.value)" class="bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded-lg uppercase w-12 text-center outline-none">
+                                    <input type="text" value="${day.date}" oninput="updateD(${dIdx}, 'date', this.value)" class="bg-transparent text-[10px] font-black text-slate-400 uppercase tracking-widest outline-none w-full">
+                                </div>
+                                <input type="text" value="${day.title}" oninput="updateD(${dIdx}, 'title', this.value)" 
+                                       class="bg-transparent text-3xl font-black text-slate-800 uppercase outline-none w-full hover:text-red-600 focus:text-red-600 transition">
+                            </div>
+                            <button onclick="addI(${dIdx})" class="bg-white border-2 border-slate-200 text-slate-800 p-3 rounded-2xl hover:bg-slate-100 shadow-sm transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div>${rows || '<div class="p-16 text-slate-300 font-black uppercase text-xs text-center tracking-widest italic">Free Day</div>'}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function exportJSON() {
+            const blob = new Blob([JSON.stringify({title: title, data: data})], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = "japan_trip_master_v15.json"; a.click();
+        }
+
+        function importJSON(e) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const imported = JSON.parse(ev.target.result);
+                    data = imported.data || imported;
+                    title = imported.title || "🇯🇵 JAPAN 2026";
+                    document.getElementById('m-title').value = title;
+                    render(); saveAll();
+                } catch(err) { alert("File error! Please use a valid JSON backup."); }
+            };
+            reader.readAsText(e.target.files[0]);
+        }
+
+        render(); calc();
+    </script>
+</body>
+</html>
